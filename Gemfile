@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-ruby '3.2.2'  # Specify Ruby version for Heroku
+ruby '3.2.6'  # Specify Ruby version for Heroku
 
 gem 'devise'      # 用于用户认证
 gem 'simple_form' # 用于简化表单

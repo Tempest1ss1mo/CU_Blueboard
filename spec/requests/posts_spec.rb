@@ -243,6 +243,28 @@ RSpec.describe "Posts", type: :request do
     end
   end
 
+  describe "GET /posts/:id/edit" do
+    let(:user) { create(:user) }
+    let!(:user_post) { create(:post, user: user) }
+
+    it "renders the edit form for the owner" do
+      sign_in user
+
+      get edit_post_path(user_post)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include('Edit Post')
+    end
+
+    it "redirects non-owners to the post page" do
+      sign_in create(:user)
+
+      get edit_post_path(user_post)
+
+      expect(response).to redirect_to(post_path(user_post))
+    end
+  end
+
   describe "POST /posts/preview" do
     let(:user) { create(:user) }
     let(:topic) { create(:topic) }

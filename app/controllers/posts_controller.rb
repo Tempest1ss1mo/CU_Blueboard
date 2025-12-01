@@ -188,10 +188,11 @@ class PostsController < ApplicationController
     return false unless params[:filters].present?
 
     query_blank = @filter_form[:q].blank?
+    # Note: school is intentionally excluded - "All Schools" (blank) is a valid filter
+    # that searches both Columbia and Barnard
     other_blank = Array(@filter_form[:tag_ids]).reject(&:blank?).empty? &&
                   @filter_form[:topic_id].blank? &&
                   @filter_form[:status].blank? &&
-                  @filter_form[:school].blank? &&
                   @filter_form[:course_code].blank? &&
                   @filter_form[:timeframe].blank?
 

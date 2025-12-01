@@ -71,7 +71,7 @@
     <%= form.label :school, class: "form-label" %>
     <%= form.select :school,
           options_for_select(Post::SCHOOLS, post.school),
-          { include_blank: 'Select a school (optional)' },
+          { include_blank: 'Select a school' },
           class: 'form-input' %>
   </div>
 

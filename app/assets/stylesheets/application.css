@@ -576,3 +576,175 @@ body {
   gap: 16px;
   align-items: center;
 }
+
+/* ======================================= */
+/* 12. Bookmark 样式                        */
+/* ======================================= */
+
+/* Post Card Wrapper - 用于包含卡片和收藏按钮 */
+.post-card-wrapper {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  position: relative;
+}
+
+.post-card-wrapper .post-card {
+  flex: 1;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.post-card-bookmark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-left: none;
+  border-radius: 0 8px 8px 0;
+  padding: 0 12px;
+  transition: background-color 0.2s;
+}
+
+.post-card-bookmark:hover {
+  background-color: #e9ecef;
+}
+
+/* 收藏按钮 - 列表页 */
+.btn-bookmark {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-bookmark:hover {
+  background-color: #fff3cd;
+  transform: scale(1.1);
+}
+
+.btn-bookmark .bookmark-icon {
+  font-size: 1.5rem;
+  color: #adb5bd;
+  line-height: 1;
+}
+
+.btn-bookmark:hover .bookmark-icon {
+  color: #ffc107;
+}
+
+.btn-bookmark.bookmarked .bookmark-icon {
+  color: #ffc107;
+}
+
+.btn-bookmark.bookmarked:hover {
+  background-color: #f8d7da;
+}
+
+.btn-bookmark.bookmarked:hover .bookmark-icon {
+  color: #dc3545;
+}
+
+/* 收藏按钮 - 详情页 (大尺寸) */
+.bookmark-section-left {
+  position: absolute;
+  left: 0;
+  order: -1;
+}
+
+.btn-bookmark-large {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: #fff;
+  border: 2px solid #dee2e6;
+  border-radius: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+}
+
+.btn-bookmark-large:hover {
+  border-color: #ffc107;
+  background-color: #fff3cd;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+}
+
+.btn-bookmark-large .bookmark-icon-large {
+  font-size: 2rem;
+  color: #adb5bd;
+  line-height: 1;
+}
+
+.btn-bookmark-large:hover .bookmark-icon-large {
+  color: #ffc107;
+}
+
+.btn-bookmark-large .bookmark-text {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-bookmark-large:hover .bookmark-text {
+  color: #856404;
+}
+
+.btn-bookmark-large.bookmarked {
+  border-color: #ffc107;
+  background-color: #fff3cd;
+}
+
+.btn-bookmark-large.bookmarked .bookmark-icon-large {
+  color: #ffc107;
+}
+
+.btn-bookmark-large.bookmarked .bookmark-text {
+  color: #856404;
+}
+
+.btn-bookmark-large.bookmarked:hover {
+  border-color: #dc3545;
+  background-color: #f8d7da;
+}
+
+.btn-bookmark-large.bookmarked:hover .bookmark-icon-large {
+  color: #dc3545;
+}
+
+.btn-bookmark-large.bookmarked:hover .bookmark-text {
+  color: #721c24;
+}
+
+/* Empty State 样式 */
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  color: #6c757d;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+/* Post List Subtitle */
+.post-list-subtitle {
+  color: #6c757d;
+  font-size: 0.95rem;
+  margin-top: -12px;
+  margin-bottom: 20px;
+}

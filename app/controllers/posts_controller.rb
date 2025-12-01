@@ -1,8 +1,8 @@
 class PostsController < ApplicationController
-  before_action :set_post, only: [ :show, :edit, :update, :destroy, :reveal_identity, :hide_identity, :unlock, :appeal ]
+  before_action :set_post, only: [ :show, :edit, :update, :destroy, :reveal_identity, :hide_identity, :unlock, :appeal, :bookmark, :unbookmark ]
   before_action :ensure_active_post, only: [ :show, :reveal_identity ]
   before_action :authorize_owner!, only: [ :edit, :update, :destroy, :unlock ]
-  before_action :load_taxonomies, only: [ :new, :create, :preview, :index, :my_threads, :edit, :update ]
+  before_action :load_taxonomies, only: [ :new, :create, :preview, :index, :my_threads, :bookmarked, :edit, :update ]
 
   # GET /posts
   def index
@@ -17,6 +17,36 @@ class PostsController < ApplicationController
     filters = @filter_form.merge(author_id: current_user.id)
     @posts = PostSearchQuery.new(filters).call
     render :index
+  end
+
+  # GET /posts/bookmarked
+  def bookmarked
+    build_filter_form
+    @viewing_bookmarked = true
+    bookmarked_post_ids = current_user.bookmarks.pluck(:post_id)
+    filters = @filter_form.merge(post_ids: bookmarked_post_ids)
+    @posts = PostSearchQuery.new(filters).call
+    render :index
+  end
+
+  # POST /posts/:id/bookmark
+  def bookmark
+    bookmark = current_user.bookmarks.build(post: @post)
+    if bookmark.save
+      redirect_back fallback_location: @post, notice: 'Post bookmarked.'
+    else
+      redirect_back fallback_location: @post, alert: 'Unable to bookmark this post.'
+    end
+  end
+
+  # DELETE /posts/:id/unbookmark
+  def unbookmark
+    bookmark = current_user.bookmarks.find_by(post: @post)
+    if bookmark&.destroy
+      redirect_back fallback_location: @post, notice: 'Bookmark removed.'
+    else
+      redirect_back fallback_location: @post, alert: 'Unable to remove bookmark.'
+    end
   end
 
   # GET /posts/1

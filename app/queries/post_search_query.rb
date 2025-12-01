@@ -11,6 +11,7 @@ class PostSearchQuery
 
   def call
     scope = Post.active.includes(:topic, :tags).order(created_at: :desc)
+    scope = apply_post_ids(scope)
     scope = apply_author(scope)
     scope = apply_text(scope)
     scope = apply_topic(scope)
@@ -79,5 +80,11 @@ class PostSearchQuery
     return scope if filters[:author_id].blank?
 
     scope.where(user_id: filters[:author_id])
+  end
+
+  def apply_post_ids(scope)
+    return scope unless filters.key?(:post_ids)
+
+    scope.where(id: filters[:post_ids])
   end
 end

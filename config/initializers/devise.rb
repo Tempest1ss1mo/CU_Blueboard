@@ -322,8 +322,8 @@ Devise.setup do |config|
       google_oauth_client_id,
       google_oauth_client_secret,
       {
-        scope: 'email,profile',  # 请求 email 和 profile 权限
-        prompt: 'select_account' # 总是提示用户选择账户
+        scope: 'email,profile',  # Request email and profile permissions
+        prompt: 'select_account' # Always prompt user to select account
       }
   else
     Rails.logger&.warn('[Devise] Google OAuth credentials missing; skipping omniauth configuration.')

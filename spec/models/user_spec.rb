@@ -198,6 +198,34 @@ RSpec.describe User, type: :model do
         expect(existing.reload.role).to eq('student')
       end
     end
+
+    context 'when email is in allowed_login_emails whitelist' do
+      let(:gmail_address) { 'tester@gmail.com' }
+
+      before do
+        allow(Rails.application.config).to receive(:allowed_login_emails)
+          .and_return([ gmail_address ])
+        allow(Rails.application.config).to receive(:moderator_emails).and_return([])
+      end
+
+      it 'allows login for whitelisted non-campus email' do
+        auth = build_auth_hash(uid: 'gmail-uid', info: { email: gmail_address })
+
+        expect {
+          @user = described_class.from_omniauth(auth)
+        }.to change(described_class, :count).by(1)
+
+        expect(@user).not_to be_nil
+        expect(@user.email).to eq(gmail_address)
+      end
+
+      it 'still rejects non-whitelisted non-campus emails' do
+        auth = build_auth_hash(uid: 'other-uid', info: { email: 'other@gmail.com' })
+        result = described_class.from_omniauth(auth)
+
+        expect(result).to be_nil
+      end
+    end
   end
 
   describe 'roles' do

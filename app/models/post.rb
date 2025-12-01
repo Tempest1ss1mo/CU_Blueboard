@@ -1,5 +1,5 @@
 class Post < ApplicationRecord
-  # 关联
+  # Associations
   belongs_to :user
   belongs_to :topic
   has_many :answers, dependent: :destroy
@@ -21,32 +21,12 @@ class Post < ApplicationRecord
   scope :active, -> { where('expires_at IS NULL OR expires_at > ?', Time.current) }
   scope :ai_flagged, -> { where(ai_flagged: true) }
 
-  validate :expires_at_within_window
-  validate :accepted_answer_belongs_to_post
-  validate :tags_within_limit
-  validate :redacted_body_presence
-
-  # 验证
-  validates :title, presence: true
-  validates :body, presence: true
-  validates :topic, presence: true
-  validates :status, presence: true
-
+  # Constants (must be defined before validations that use them)
   STATUSES = {
     open: 'open',
     solved: 'solved',
     locked: 'locked'
   }.freeze
-  validates :status, inclusion: { in: STATUSES.values }
-
-  STATUSES.each do |key, value|
-    scope "status_#{key}", -> { where(status: value) }
-
-    define_method("status_#{key}?") do
-      status == value
-    end
-  end
-
   TAG_LIMIT = 5
   MIN_TAGS = 1
   SCHOOLS = [ 'Columbia', 'Barnard' ].freeze
@@ -56,6 +36,27 @@ class Post < ApplicationRecord
     redacted: 'redacted'
   }.freeze
   enum :redaction_state, REDACTION_STATES, default: :visible
+
+  # Validations
+  validates :title, presence: true
+  validates :body, presence: true
+  validates :topic, presence: true
+  validates :status, presence: true, inclusion: { in: STATUSES.values }
+  validates :school, presence: true, inclusion: { in: SCHOOLS }
+
+  validate :expires_at_within_window
+  validate :accepted_answer_belongs_to_post
+  validate :tags_within_limit
+  validate :redacted_body_presence
+
+  # Status scopes and helper methods
+  STATUSES.each do |key, value|
+    scope "status_#{key}", -> { where(status: value) }
+
+    define_method("status_#{key}?") do
+      status == value
+    end
+  end
 
   # Vote helper methods
   def upvotes_count
@@ -116,7 +117,7 @@ class Post < ApplicationRecord
     update!(accepted_answer: nil, locked_at: nil, status: STATUSES[:open])
   end
 
-  # --- 这是 SQLite 的搜索方法 (替代 pg_search) ---
+  # --- SQLite search method (replaces pg_search) ---
   def self.search(query)
     PostSearchQuery.new({ q: query }).call
   end

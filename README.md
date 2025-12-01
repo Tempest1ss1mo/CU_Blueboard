@@ -26,8 +26,17 @@
    bundle install
    ```
 
-3. Configure Google OAuth the first time you work on this repo:
-   1. Create a Web client in Google Cloud Console and add both `http://localhost:3000/users/auth/google_oauth2/callback` and `http://127.0.0.1:3000/users/auth/google_oauth2/callback` under *Authorized redirect URIs*. (Leave “Authorized JavaScript origins” empty.)
+3. Configure Google OAuth using **one of the following methods**:
+
+   **Option A: Environment Variables (Recommended for graders/TAs)**
+   ```bash
+   # Copy the example environment file and edit it
+   cp example.env .env
+   # Then edit .env with your Google OAuth credentials
+   ```
+
+   **Option B: Rails Credentials (Original method)**
+   1. Create a Web client in Google Cloud Console and add both `http://localhost:3000/users/auth/google_oauth2/callback` and `http://127.0.0.1:3000/users/auth/google_oauth2/callback` under *Authorized redirect URIs*. (Leave "Authorized JavaScript origins" empty.)
    2. Remove the old encrypted credentials and add the new secrets:
       ```bash
       rm -f config/credentials.yml.enc
@@ -41,6 +50,10 @@
         client_secret: YOUR_CLIENT_SECRET
       ```
       Save/exit and share the regenerated `config/master.key` securely with your team. Confirm the entry with `bin/rails credentials:show`.
+
+   **Important for OAuth Testing:**
+   - If your Google Cloud project is in "Testing" mode, you must add test user emails under *APIs & Services > OAuth consent screen > Test users*
+   - Alternatively, publish your app to "Production" status to allow any @columbia.edu/@barnard.edu email
 4. Prepare the database:
    ```bash
    bin/rails db:prepare
@@ -98,7 +111,7 @@ bundle exec cucumber
 ```
 
 **RSpec coverage**
-- Line Coverage: 100% (726 / 726) 262 examples, 0 failures
+- Line Coverage: 100% (729 / 729) 266 examples, 0 failures
 - `spec/models/post_spec.rb`: validations, taxonomy limits, search helper, expiration logic, and thread-identity callback.
 - `spec/models/answer_spec.rb`: body validations, per-thread identities, reveal logging, and acceptance cleanup.
 - `spec/models/answer_comment_spec.rb`: comment validation + thread delegation to preserve pseudonyms.
@@ -116,7 +129,7 @@ bundle exec cucumber
 
 **Cucumber scenarios**
 - Latest run: 29 scenarios / 203 steps passing in ~1.1s via `bundle exec cucumber`.
-- Coverage snapshot: line 100% (726/726), branch 100% (213/213) once merged with the RSpec suite. Run `bundle exec cucumber` followed by `open coverage/index.html` to inspect details.
+- Coverage snapshot: line 100% (729/729), branch 100% (215/215) once merged with the RSpec suite. Run `bundle exec cucumber` followed by `open coverage/index.html` to inspect details.
 - Reports publish to https://reports.cucumber.io by default (`CUCUMBER_PUBLISH_ENABLED=true`). Set `CUCUMBER_PUBLISH_QUIET=true` or pass `--publish-quiet` locally to silence the banner.
 - `features/posts/browse_posts.feature`: authenticated browsing, advanced filters, My Threads navigation, blank-search alerts, and guest redirect to the SSO screen.
 - `features/posts/create_post.feature`: signup + creation flow, validation failures, expiring threads, and draft preview UX.
@@ -148,6 +161,27 @@ Running the test suites will generate a detailed coverage report in `coverage/in
 - Heroku: https://cu-blueboard-27a6a02ee825.herokuapp.com/
 - Source code: https://github.com/zhstella/CU_Blueboard
 
+### Heroku Deployment Checklist
+After deploying to Heroku, run these commands to ensure the app works correctly:
+
+```bash
+# 1. Set environment variables
+heroku config:set GOOGLE_OAUTH2_CLIENT_ID=your_client_id --app your-app-name
+heroku config:set GOOGLE_OAUTH2_CLIENT_SECRET=your_client_secret --app your-app-name
+heroku config:set MODERATOR_EMAILS="ao2686@columbia.edu,hm3075@columbia.edu,lae2146@columbia.edu,xz2995@columbia.edu,jm5676@columbia.edu,jy2324@columbia.edu" --app your-app-name
+
+# 2. Run database migrations
+heroku run rails db:migrate --app your-app-name
+
+# 3. Seed the database (REQUIRED - creates topics and tags for post creation)
+heroku run rails db:seed --app your-app-name
+
+# 4. Verify deployment (optional)
+heroku run rails deployment:check --app your-app-name
+```
+
+**Important:** If posts cannot be created (no tags available), run `heroku run rails db:seed` to populate the required taxonomy data.
+
 ## Additional Materials
 - Iteration artifacts (such as proposal.txt) are stored in `/docs` as the project evolves.
 - A daily `ExpirePostsJob` can be scheduled (e.g., via Heroku Scheduler or cron) to purge posts whose `expires_at` timestamp has passed.
@@ -156,18 +190,32 @@ Running the test suites will generate a detailed coverage report in `coverage/in
 ### Moderator Setup
 The application supports role-based moderation with automatic role assignment via environment variables.
 
+#### Course Staff (TAs & Instructor)
+The following emails are pre-configured in `example.env` for moderator access:
+
+| Name | Email | Role |
+|------|-------|------|
+| Aimee Oh | ao2686@columbia.edu | TA |
+| Hailie Mitchell | hm3075@columbia.edu | TA |
+| Layanne El | lae2146@columbia.edu | TA |
+| Xuanming Billy Zhang | xz2995@columbia.edu | TA |
+| Jenny Ma | jm5676@columbia.edu | TA |
+| Junfeng Yang | jy2324@columbia.edu | Instructor |
+
 #### Configuring Moderators
 Add moderator emails to the `MODERATOR_EMAILS` environment variable (comma-separated):
 
 **Local Development:**
 ```bash
-# .env file
-MODERATOR_EMAILS=your-email@columbia.edu  # Replace with your test email
+# .env file (copy from example.env which includes all course staff)
+cp example.env .env
+# Or manually set:
+MODERATOR_EMAILS=ao2686@columbia.edu,hm3075@columbia.edu,lae2146@columbia.edu,xz2995@columbia.edu,jm5676@columbia.edu,jy2324@columbia.edu
 ```
 
 **Production (Heroku):**
 ```bash
-heroku config:set MODERATOR_EMAILS="your-email@columbia.edu"  # Replace with actual moderator emails
+heroku config:set MODERATOR_EMAILS="ao2686@columbia.edu,hm3075@columbia.edu,lae2146@columbia.edu,xz2995@columbia.edu,jm5676@columbia.edu,jy2324@columbia.edu"
 ```
 
 #### How It Works
@@ -182,6 +230,25 @@ For local development/testing, you can manually assign roles via Rails console:
 user = User.find_by(email: 'someone@columbia.edu')
 user.update(role: :moderator)
 ```
+
+### Allowing Non-Columbia Emails (for TA/Grader Testing)
+By default, only `@columbia.edu` and `@barnard.edu` emails can log in. To allow specific non-campus emails (e.g., for TAs testing with personal Gmail accounts), use the `ALLOWED_LOGIN_EMAILS` environment variable:
+
+**Local Development (.env file):**
+```bash
+# Comma-separated list of emails that bypass domain restriction
+ALLOWED_LOGIN_EMAILS=ta_personal@gmail.com,grader@example.com
+```
+
+**Production (Heroku):**
+```bash
+heroku config:set ALLOWED_LOGIN_EMAILS="ta_personal@gmail.com,grader@example.com"
+```
+
+**How It Works:**
+- Emails in `ALLOWED_LOGIN_EMAILS` skip the domain check entirely
+- They can still be added to `MODERATOR_EMAILS` for moderator access
+- Leave empty to only allow columbia.edu/barnard.edu emails
 
 ### OpenAI Moderation API (Automated Content Screening)
 The moderation system integrates with OpenAI's Moderation API for automated content screening.
@@ -203,6 +270,34 @@ The moderation system integrates with OpenAI's Moderation API for automated cont
 
 **Under Consideration:**
 - Email notifications to moderators for flagged content and appeal requests
+
+## Troubleshooting
+
+### Posts cannot be created (no tags available)
+```bash
+# Run seed to create topics and tags
+rails db:seed        # local
+heroku run rails db:seed --app your-app-name  # Heroku
+```
+
+### Google OAuth not working
+1. Verify environment variables are set:
+   ```bash
+   echo $GOOGLE_OAUTH2_CLIENT_ID
+   echo $GOOGLE_OAUTH2_CLIENT_SECRET
+   ```
+2. Check redirect URIs in Google Cloud Console match your domain exactly
+3. If in "Testing" mode, ensure your email is added as a Test User
+4. Ensure email domain is `@columbia.edu` or `@barnard.edu`, or add your email to `ALLOWED_LOGIN_EMAILS` for non-campus testing
+
+### Accept answer button not working
+- Clear browser cache or try in incognito mode
+- Check browser console for JavaScript errors
+- Ensure the post is not already locked
+
+### School filter returns empty results
+- Posts require a school selection (Columbia or Barnard)
+- Filtering by school only shows posts with that specific school selected
 
 ## Addressing Iteration 1 Feedback
 - Added the missing user-story coverage that graders flagged (blank search alert, invalid post/answer validations, and guest redirects) so every scenario now runs via Cucumber (`features/posts/browse_posts.feature`, `features/posts/create_post.feature`, `features/answers/add_answer.feature`).

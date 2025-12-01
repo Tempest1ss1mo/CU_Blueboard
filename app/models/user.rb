@@ -1,12 +1,12 @@
 require 'securerandom'
 
 class User < ApplicationRecord
-  # 1. 你的 Devise 模块
+  # 1. Devise modules
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable,
          :omniauthable, omniauth_providers: [ :google_oauth2 ]
 
-  # 2. 你的数据关联
+  # 2. Associations
   has_many :posts, dependent: :destroy
   has_many :answers, dependent: :destroy
   has_many :likes, dependent: :destroy
@@ -35,23 +35,29 @@ class User < ApplicationRecord
     moderator? || staff? || admin?
   end
 
-  # 3. 修复了"账户链接"逻辑的 OmniAuth 方法
+  # 3. OmniAuth method with account linking logic
   def self.from_omniauth(auth)
-    # --- 这是【新】的域名检查逻辑 ---
-    allowed_domains = [ '@columbia.edu', '@barnard.edu' ]
-    email_domain = auth.info.email.match(/@(.+)/)[1] # 提取 "@" 后面的所有内容
+    email = auth.info.email
 
-    unless allowed_domains.include?("@#{email_domain}")
-      return nil # 拒绝不在列表中的域名
+    # Check if email is in the allowed login emails whitelist (bypass domain check)
+    allowed_login_emails = Rails.application.config.allowed_login_emails || []
+
+    # Domain check (skip if email is whitelisted)
+    unless allowed_login_emails.include?(email)
+      allowed_domains = [ '@columbia.edu', '@barnard.edu' ]
+      email_domain = email.match(/@(.+)/)[1] # Extract domain after "@"
+
+      unless allowed_domains.include?("@#{email_domain}")
+        return nil # Reject non-campus emails not in whitelist
+      end
     end
-    # --- 结束新的检查 ---
 
     # Check moderator whitelist (for all cases)
     moderator_emails = Rails.application.config.moderator_emails || []
     target_role = moderator_emails.include?(auth.info.email) ? :moderator : :student
 
-    # 案例 1: 用户以前用 Google 登录过
-    # 正常通过 provider 和 uid 查找
+    # Case 1: User previously signed in with Google
+    # Find by provider and uid
     user = User.find_by(provider: auth.provider, uid: auth.uid)
     if user
       # Update role based on current whitelist
@@ -59,20 +65,20 @@ class User < ApplicationRecord
       return user
     end
 
-    # 案例 2: 找不到。尝试通过 email 查找
-    # (这处理了"用户先用 Email/Password 注册"的情况)
+    # Case 2: Not found. Try to find by email
+    # (handles users who registered with email/password first)
     user = User.find_by(email: auth.info.email)
     if user
-      # 找到了！更新这个用户的 provider 和 uid 来"链接"Google 账户
+      # Found! Link Google account by updating provider and uid
       user.update(
         provider: auth.provider,
         uid: auth.uid,
         role: target_role  # Also update role based on whitelist
       )
-      return user # 返回这个刚被链接的账户
+      return user # Return the linked account
     end
 
-    # 案例 3: 数据库里完全没有这个用户。创建一个全新的。
+    # Case 3: No user exists in database. Create a new one.
     User.create(
       provider: auth.provider,
       uid: auth.uid,

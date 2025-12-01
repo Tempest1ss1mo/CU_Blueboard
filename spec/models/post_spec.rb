@@ -24,6 +24,18 @@ RSpec.describe Post, type: :model do
     expect(post.errors[:topic]).to include("can't be blank")
   end
 
+  it 'is invalid without a school' do
+    post = build(:post, school: nil)
+    expect(post).not_to be_valid
+    expect(post.errors[:school]).to include("can't be blank")
+  end
+
+  it 'is invalid with an invalid school' do
+    post = build(:post, school: 'Harvard')
+    expect(post).not_to be_valid
+    expect(post.errors[:school]).to include('is not included in the list')
+  end
+
   it 'requires at least one tag' do
     post = build(:post)
     post.tags = []

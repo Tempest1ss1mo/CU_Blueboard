@@ -17,7 +17,7 @@ class AnswersController < ApplicationController
       redirect_to @post, notice: 'Answer added.'
     else
       @answers = @post.answers.includes(:user).order(created_at: :asc)
-      render 'posts/show', status: :unprocessable_entity
+      render 'posts/show', status: :unprocessable_content
     end
   end
 
@@ -36,7 +36,7 @@ class AnswersController < ApplicationController
       @answer.record_revision!(editor: current_user, previous_body: previous_body)
       redirect_to @post, notice: 'Answer updated.'
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 

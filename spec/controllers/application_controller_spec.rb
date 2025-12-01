@@ -55,6 +55,12 @@ RSpec.describe ApplicationController, type: :controller do
       expect(response).to have_http_status(:ok)
     end
 
+    it 'allows admin (admin? branch)' do
+      allow(controller).to receive(:current_user).and_return(admin)
+      get :staff_action
+      expect(response).to have_http_status(:ok)
+    end
+
     it 'blocks moderators' do
       allow(controller).to receive(:current_user).and_return(moderator)
       get :staff_action

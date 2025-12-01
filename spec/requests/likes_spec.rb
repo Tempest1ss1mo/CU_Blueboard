@@ -86,4 +86,79 @@ RSpec.describe "Likes", type: :request do
       end
     end
   end
+
+  describe "POST /posts/:post_id/upvote" do
+    before { sign_in user }
+
+    context "when no existing vote" do
+      it "creates an upvote" do
+        expect {
+          post upvote_post_path(post_record)
+        }.to change { post_record.likes.upvotes.count }.by(1)
+
+        expect(response).to redirect_to(post_path(post_record))
+      end
+    end
+
+    context "when already upvoted (toggle off)" do
+      before { create(:like, :upvote, user: user, post: post_record) }
+
+      it "removes the upvote" do
+        expect {
+          post upvote_post_path(post_record)
+        }.to change { post_record.likes.count }.by(-1)
+      end
+    end
+
+    context "when already downvoted (switch to upvote)" do
+      before { create(:like, :downvote, user: user, post: post_record) }
+
+      it "switches to upvote" do
+        post upvote_post_path(post_record)
+        expect(post_record.find_vote_by(user).upvote?).to be true
+      end
+    end
+  end
+
+  describe "POST /posts/:post_id/downvote" do
+    before { sign_in user }
+
+    context "when no existing vote" do
+      it "creates a downvote" do
+        expect {
+          post downvote_post_path(post_record)
+        }.to change { post_record.likes.downvotes.count }.by(1)
+
+        expect(response).to redirect_to(post_path(post_record))
+      end
+    end
+
+    context "when already downvoted (toggle off)" do
+      before { create(:like, :downvote, user: user, post: post_record) }
+
+      it "removes the downvote" do
+        expect {
+          post downvote_post_path(post_record)
+        }.to change { post_record.likes.count }.by(-1)
+      end
+    end
+
+    context "when already upvoted (switch to downvote)" do
+      before { create(:like, :upvote, user: user, post: post_record) }
+
+      it "switches to downvote" do
+        post downvote_post_path(post_record)
+        expect(post_record.find_vote_by(user).downvote?).to be true
+      end
+    end
+
+    context "when not signed in" do
+      before { sign_out user }
+
+      it "requires authentication" do
+        post downvote_post_path(post_record)
+        expect(response).to redirect_to(new_user_session_path)
+      end
+    end
+  end
 end

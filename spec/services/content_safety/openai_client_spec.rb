@@ -1,5 +1,4 @@
 require 'rails_helper'
-require 'webmock/rspec'
 
 RSpec.describe ContentSafety::OpenaiClient, type: :service do
   let(:api_key) { 'test_api_key_12345' }

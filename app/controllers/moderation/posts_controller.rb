@@ -11,18 +11,10 @@ module Moderation
                             .includes(:user, :redacted_by)
                             .order(updated_at: :desc)
 
-      if @redacted_posts.respond_to?(:page)
-        @redacted_posts = @redacted_posts.page(params[:page]).per(20)
-      end
-
       # AI-flagged posts (not yet redacted by human moderators)
       @ai_flagged_posts = Post.where(ai_flagged: true, redaction_state: 'visible')
                               .includes(:user, :redacted_by)
                               .order(updated_at: :desc)
-
-      if @ai_flagged_posts.respond_to?(:page)
-        @ai_flagged_posts = @ai_flagged_posts.page(params[:page]).per(20)
-      end
     end
 
     # GET /moderation/posts/:id

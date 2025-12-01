@@ -10,12 +10,12 @@ Feature: Reveal identity on demand
 
   Scenario: Author reveals their identity on a post
     When I reveal my identity on the post titled "Looking for study partners"
-    Then I should see "Author chose to reveal their identity."
+    Then I should see "Your identity is now visible on this thread."
     And I should see "author@example.com" on the page
 
   Scenario: Author reveals their identity on an answer
     When I visit the post titled "Looking for study partners"
     And I leave an answer "Happy to share my UNI if needed."
     And I reveal my identity on the most recent answer
-    Then I should see "Answerer revealed their identity."
+    Then I should see "Your identity is now visible on this answer."
     And I should see "author@example.com" in the answers list

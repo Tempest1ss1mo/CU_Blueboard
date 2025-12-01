@@ -401,4 +401,111 @@ RSpec.describe "Posts", type: :request do
       expect(response.body).to include('No accepted answer to unlock.')
     end
   end
+
+  describe "PATCH /posts/:id/hide_identity" do
+    let!(:post_record) { create(:post, show_real_identity: true) }
+
+    context "when the author is signed in" do
+      before { sign_in post_record.user }
+
+      it "hides the author identity and logs the action" do
+        expect {
+          patch hide_identity_post_path(post_record)
+        }.to change(AuditLog, :count).by(1)
+
+        expect(post_record.reload.show_real_identity).to be(false)
+        expect(response).to redirect_to(post_path(post_record))
+        follow_redirect!
+        expect(response.body).to include('Your identity is now hidden on this thread.')
+      end
+
+      it "alerts the author when hide fails" do
+        allow_any_instance_of(Post).to receive(:update).and_return(false)
+
+        patch hide_identity_post_path(post_record)
+
+        expect(response).to redirect_to(post_path(post_record))
+        follow_redirect!
+        expect(response.body).to include('Unable to hide identity.')
+      end
+    end
+
+    context "when a different user is signed in" do
+      it "denies permission" do
+        sign_in create(:user)
+
+        patch hide_identity_post_path(post_record)
+
+        expect(post_record.reload.show_real_identity).to be(true)
+        expect(response).to redirect_to(post_path(post_record))
+        follow_redirect!
+        expect(response.body).to include('You do not have permission to hide this identity.')
+      end
+    end
+  end
+
+  describe "POST /posts/:id/appeal" do
+    let!(:post_record) { create(:post, ai_flagged: true) }
+
+    context "when the author is signed in and post is ai_flagged" do
+      before { sign_in post_record.user }
+
+      it "submits the appeal successfully" do
+        post appeal_post_path(post_record)
+
+        expect(post_record.reload.appeal_requested).to be(true)
+        expect(response).to redirect_to(post_path(post_record))
+        follow_redirect!
+        expect(response.body).to include('Appeal submitted.')
+      end
+    end
+
+    context "when the post is not ai_flagged" do
+      let!(:unflagged_post) { create(:post, ai_flagged: false) }
+
+      it "denies the appeal request" do
+        sign_in unflagged_post.user
+
+        post appeal_post_path(unflagged_post)
+
+        expect(unflagged_post.reload.appeal_requested).to be(false)
+        expect(response).to redirect_to(post_path(unflagged_post))
+        follow_redirect!
+        expect(response.body).to include('Unable to submit appeal.')
+      end
+    end
+
+    context "when a different user is signed in" do
+      it "denies the appeal request" do
+        sign_in create(:user)
+
+        post appeal_post_path(post_record)
+
+        expect(post_record.reload.appeal_requested).to be(false)
+        expect(response).to redirect_to(post_path(post_record))
+        follow_redirect!
+        expect(response.body).to include('Unable to submit appeal.')
+      end
+    end
+  end
+
+  describe "PATCH /posts/:id with invalid data" do
+    let(:user) { create(:user) }
+    let!(:post_record) { create(:post, user: user) }
+
+    it "renders edit on validation failure" do
+      sign_in user
+
+      patch post_path(post_record), params: {
+        post: {
+          title: '',
+          body: '',
+          topic_id: post_record.topic_id,
+          tag_ids: post_record.tag_ids
+        }
+      }
+
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+  end
 end

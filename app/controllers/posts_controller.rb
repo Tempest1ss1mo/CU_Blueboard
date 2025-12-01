@@ -1,5 +1,5 @@
 class PostsController < ApplicationController
-  before_action :set_post, only: [ :show, :edit, :update, :destroy, :reveal_identity, :unlock ]
+  before_action :set_post, only: [ :show, :edit, :update, :destroy, :reveal_identity, :hide_identity, :unlock, :appeal ]
   before_action :ensure_active_post, only: [ :show, :reveal_identity ]
   before_action :authorize_owner!, only: [ :edit, :update, :destroy, :unlock ]
   before_action :load_taxonomies, only: [ :new, :create, :preview, :index, :my_threads, :edit, :update ]
@@ -46,7 +46,7 @@ class PostsController < ApplicationController
       redirect_to posts_path, notice: 'Post was successfully created!'
     else
       assign_duplicate_posts(@post)
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -62,18 +62,14 @@ class PostsController < ApplicationController
       redirect_to @post, notice: 'Post updated.'
     else
       assign_duplicate_posts(@post)
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 
   # DELETE /posts/1
   def destroy
-    if @post.user == current_user
-      @post.destroy
-      redirect_to posts_url, notice: 'Post deleted.'
-    else
-      redirect_to @post, alert: 'You do not have permission to delete this post.'
-    end
+    @post.destroy
+    redirect_to posts_url, notice: 'Post deleted.'
   end
 
   def reveal_identity

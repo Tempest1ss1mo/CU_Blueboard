@@ -98,7 +98,7 @@ bundle exec cucumber
 ```
 
 **RSpec coverage**
-- Line Coverage: 97.38% (633 / 650) 195 examples, 0 failure
+- Line Coverage: 100% (726 / 726) 262 examples, 0 failures
 - `spec/models/post_spec.rb`: validations, taxonomy limits, search helper, expiration logic, and thread-identity callback.
 - `spec/models/answer_spec.rb`: body validations, per-thread identities, reveal logging, and acceptance cleanup.
 - `spec/models/answer_comment_spec.rb`: comment validation + thread delegation to preserve pseudonyms.
@@ -116,7 +116,7 @@ bundle exec cucumber
 
 **Cucumber scenarios**
 - Latest run: 29 scenarios / 203 steps passing in ~1.1s via `bundle exec cucumber`.
-- Coverage snapshot: line 96.03% (459/478), branch 83.87% (104/124) once merged with the RSpec suite. Run `bundle exec cucumber` followed by `open coverage/index.html` to inspect details.
+- Coverage snapshot: line 100% (726/726), branch 100% (213/213) once merged with the RSpec suite. Run `bundle exec cucumber` followed by `open coverage/index.html` to inspect details.
 - Reports publish to https://reports.cucumber.io by default (`CUCUMBER_PUBLISH_ENABLED=true`). Set `CUCUMBER_PUBLISH_QUIET=true` or pass `--publish-quiet` locally to silence the banner.
 - `features/posts/browse_posts.feature`: authenticated browsing, advanced filters, My Threads navigation, blank-search alerts, and guest redirect to the SSO screen.
 - `features/posts/create_post.feature`: signup + creation flow, validation failures, expiring threads, and draft preview UX.
@@ -139,8 +139,8 @@ After running both test suites, view the coverage report:
 open coverage/index.html
 ```
 
-**Target:** 90%+ statement coverage
-**Local test results:** 97.38% line coverage (after running both suites)
+**Target:** 100% statement and branch coverage
+**Local test results:** 100% line coverage, 100% branch coverage (after running both suites)
 
 Running the test suites will generate a detailed coverage report in `coverage/index.html`.
 

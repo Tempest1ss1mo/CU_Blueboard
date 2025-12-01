@@ -63,6 +63,36 @@ RSpec.describe Answer, type: :model do
     expect(answer.errors[:base]).to include('This thread is locked. No new answers can be added.')
   end
 
+  describe '#post_must_be_open' do
+    it 'passes validation when post is nil (safe navigation branch)' do
+      answer = build(:answer)
+      answer.post = nil
+      answer.valid?
+      # post_must_be_open passes due to safe navigation, but belongs_to fails
+      expect(answer.errors[:base]).not_to include('This thread is locked. No new answers can be added.')
+    end
+  end
+
+  describe '#record_revision!' do
+    let(:answer) { create(:answer) }
+    let(:editor) { create(:user) }
+
+    it 'skips revision when body unchanged' do
+      expect {
+        answer.record_revision!(editor: editor, previous_body: answer.body)
+      }.not_to change { answer.answer_revisions.count }
+    end
+
+    it 'creates revision when body changes' do
+      original_body = answer.body
+      answer.update!(body: 'Updated body content')
+
+      expect {
+        answer.record_revision!(editor: editor, previous_body: original_body)
+      }.to change { answer.answer_revisions.count }.by(1)
+    end
+  end
+
   describe 'redaction fields' do
     it 'defaults to visible' do
       answer = create(:answer)

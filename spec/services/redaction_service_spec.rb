@@ -264,6 +264,31 @@ RSpec.describe RedactionService, type: :service do
         )
       ).to be(false)
     end
+
+    context 'when user lacks moderation privileges' do
+      it 'raises ArgumentError' do
+        expect {
+          RedactionService.redact_answer(
+            answer: answer,
+            moderator: student,
+            reason: 'test'
+          )
+        }.to raise_error(ArgumentError, 'Moderator must have moderation privileges')
+      end
+    end
+
+    context 'with invalid state' do
+      it 'raises ArgumentError' do
+        expect {
+          RedactionService.redact_answer(
+            answer: answer,
+            moderator: moderator,
+            reason: 'test',
+            state: :invalid
+          )
+        }.to raise_error(ArgumentError, 'Invalid redaction state')
+      end
+    end
   end
 
   describe '.unredact_answer' do
@@ -312,6 +337,30 @@ RSpec.describe RedactionService, type: :service do
           moderator: moderator
         )
       ).to be(false)
+    end
+
+    context 'when user lacks moderation privileges' do
+      it 'raises ArgumentError' do
+        expect {
+          RedactionService.unredact_answer(
+            answer: answer,
+            moderator: student
+          )
+        }.to raise_error(ArgumentError, 'Moderator must have moderation privileges')
+      end
+    end
+
+    context 'when answer is not redacted' do
+      let(:visible_answer) { create(:answer, user: student) }
+
+      it 'raises ArgumentError' do
+        expect {
+          RedactionService.unredact_answer(
+            answer: visible_answer,
+            moderator: moderator
+          )
+        }.to raise_error(ArgumentError, 'Answer is not redacted')
+      end
     end
   end
 

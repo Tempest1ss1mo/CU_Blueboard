@@ -121,7 +121,7 @@ RSpec.describe "Answers", type: :request do
 
         patch post_answer_path(post_record, answer), params: { answer: { body: '' } }
 
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(response.body).to include("Body can&#39;t be blank")
       end
     end

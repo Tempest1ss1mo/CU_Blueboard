@@ -151,6 +151,53 @@ RSpec.describe User, type: :model do
       expect(@new_user.provider).to eq('google_oauth2')
       expect(@new_user.uid).to eq('fresh-uid')
     end
+
+    context 'when email is in moderator whitelist' do
+      let(:moderator_email) { 'moderator@columbia.edu' }
+
+      before do
+        allow(Rails.application.config).to receive(:moderator_emails)
+          .and_return([ moderator_email ])
+      end
+
+      it 'assigns moderator role to new user' do
+        auth = build_auth_hash(uid: 'mod-uid', info: { email: moderator_email })
+        user = described_class.from_omniauth(auth)
+
+        expect(user.role).to eq('moderator')
+      end
+
+      it 'updates existing user to moderator role' do
+        existing = create(:user, provider: 'google_oauth2', uid: 'mod-existing',
+                          email: moderator_email, role: :student)
+        auth = build_auth_hash(uid: 'mod-existing', info: { email: moderator_email })
+
+        result = described_class.from_omniauth(auth)
+
+        expect(result.reload.role).to eq('moderator')
+      end
+    end
+
+    context 'when existing user role already matches target role' do
+      before do
+        allow(Rails.application.config).to receive(:moderator_emails).and_return([])
+      end
+
+      it 'does not update when role is already student' do
+        existing = create(:user, provider: 'google_oauth2', uid: 'same-role',
+                          email: 'same@columbia.edu', role: :student)
+        original_updated_at = existing.updated_at
+
+        auth = build_auth_hash(uid: 'same-role', info: { email: 'same@columbia.edu' })
+
+        # Sleep briefly to ensure any update would have a different timestamp
+        sleep 0.01
+        described_class.from_omniauth(auth)
+
+        # Role is already student and target is student, so no update should occur
+        expect(existing.reload.role).to eq('student')
+      end
+    end
   end
 
   describe 'roles' do

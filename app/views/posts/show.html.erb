@@ -186,6 +186,23 @@
 
   <%# --- Post actions (centered layout) --- %>
   <div class="post-actions-container">
+    <%# Bookmark Button - Left %>
+    <div class="bookmark-section-left">
+      <% if user_signed_in? %>
+        <% if @post.bookmarked_by?(current_user) %>
+          <%= button_to unbookmark_post_path(@post), method: :delete, class: "btn-bookmark-large bookmarked", data: { turbo: false } do %>
+            <span class="bookmark-icon-large">&#9733;</span>
+            <span class="bookmark-text">Bookmarked</span>
+          <% end %>
+        <% else %>
+          <%= button_to bookmark_post_path(@post), method: :post, class: "btn-bookmark-large", data: { turbo: false } do %>
+            <span class="bookmark-icon-large">&#9734;</span>
+            <span class="bookmark-text">Bookmark</span>
+          <% end %>
+        <% end %>
+      <% end %>
+    </div>
+
     <%# Vote System (Upvote/Downvote) - Center %>
     <div class="vote-section-center">
       <% if user_signed_in? %>

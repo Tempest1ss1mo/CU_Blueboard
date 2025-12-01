@@ -11,8 +11,8 @@
 - Proposal: see `/docs/proposal.txt`
 
 ## Prerequisites
-- Ruby `3.2.2` (see `.ruby-version`)
-  - Recommended: install via `rbenv` → `brew install rbenv ruby-build`, `rbenv install 3.2.2`, `rbenv local 3.2.2`
+- Ruby `3.2.6` (see `.ruby-version`)
+  - Recommended: install via `rbenv` → `brew install rbenv ruby-build`, `rbenv install 3.2.6`, `rbenv local 3.2.6`
 - Bundler (`gem install bundler`)
 - SQLite 3 (ships with macOS/Linux)
 - Google OAuth 2.0 client ID & secret configured for the CU/Barnard domains (see *Configure Google OAuth* below)
@@ -100,6 +100,13 @@
 - Configure moderators via environment variable whitelist with automatic role assignment on OAuth login, eliminating manual role management.
 - Screen content automatically with OpenAI Moderation API detecting violence, hate, self-harm, and harassment; authors can submit appeals for moderator review.
 
+### Post Bookmark Feature
+- **Bookmark/Unbookmark Posts**: Users can click the star icon (☆/★) on any post card or post detail page to bookmark or unbookmark posts for later reference.
+- **View Bookmarked Posts**: Access all bookmarked posts via the "Bookmarks" link in the navigation header (positioned before "My Threads"), with full filter support (search, topic, tags, status, school, course, timeframe).
+- **Visual Feedback**: Gold filled star (★) indicates bookmarked posts, empty star (☆) for unbookmarked. Hover effects show yellow highlight for bookmarking and red highlight for removing bookmarks.
+- **Consistent UI**: The bookmarked posts page uses the same layout and styling as "My Threads" for a unified user experience.
+- **Data Model**: `Bookmark` model with user-post associations and uniqueness constraint preventing duplicate bookmarks.
+
 
 ## Test Suites
 ```bash
@@ -111,7 +118,7 @@ bundle exec cucumber
 ```
 
 **RSpec coverage**
-- Line Coverage: 100% (729 / 729) 266 examples, 0 failures
+- Line Coverage: 100% (761 / 761) 299 examples, 0 failures
 - `spec/models/post_spec.rb`: validations, taxonomy limits, search helper, expiration logic, and thread-identity callback.
 - `spec/models/answer_spec.rb`: body validations, per-thread identities, reveal logging, and acceptance cleanup.
 - `spec/models/answer_comment_spec.rb`: comment validation + thread delegation to preserve pseudonyms.
@@ -125,7 +132,9 @@ bundle exec cucumber
 - `spec/requests/omniauth_callbacks_spec.rb`: Google SSO domain enforcement and account linking.
 - `spec/helpers/application_helper_spec.rb`: `display_author` pseudonym helper.
 - `spec/queries/post_search_query_spec.rb`: text/topic/status/tag/school/course/timeframe/author filters.
-- `spec/services/duplicate_post_finder_spec.rb`: verifies the composer’s duplicate-detector logic.
+- `spec/services/duplicate_post_finder_spec.rb`: verifies the composer's duplicate-detector logic.
+- `spec/models/bookmark_spec.rb`: bookmark associations, validations, uniqueness constraints, and helper methods.
+- `spec/requests/bookmarks_spec.rb`: bookmark/unbookmark endpoints, bookmarked posts listing, and authentication guards.
 
 **Cucumber scenarios**
 - Latest run: 29 scenarios / 203 steps passing in ~1.1s via `bundle exec cucumber`.
@@ -311,7 +320,7 @@ CU_Blueboard/
 ├── app/
 │   ├── controllers/
 │   │   ├── application_controller.rb             # Global auth hook + moderator helpers
-│   │   ├── posts_controller.rb                   # Post CRUD + My Threads + revisions
+│   │   ├── posts_controller.rb                   # Post CRUD + My Threads + revisions + bookmarks
 │   │   ├── answers_controller.rb                 # Answer CRUD + revisions + accept
 │   │   ├── answer_comments_controller.rb         # Answer comment create/destroy
 │   │   ├── likes_controller.rb                   # Like toggle endpoints
@@ -330,14 +339,15 @@ CU_Blueboard/
 │   │   ├── duplicate_post_finder.rb              # Composer duplicate detection
 │   │   └── redaction_service.rb                  # Post/Answer redaction service
 │   ├── models/
-│   │   ├── post.rb                               # Post validations + taxonomy + status helpers
+│   │   ├── post.rb                               # Post validations + taxonomy + status helpers + bookmark support
 │   │   ├── post_revision.rb                      # Stores post edit history
 │   │   ├── answer.rb                             # Answer validations + reveal support
 │   │   ├── answer_revision.rb                    # Stores answer edit history
 │   │   ├── answer_comment.rb                     # Inline comments on answers
+│   │   ├── bookmark.rb                           # Bookmark model for user-post associations
 │   │   ├── like.rb / thread_identity.rb / audit_log.rb
 │   │   ├── tag.rb / topic.rb / post_tag.rb       # Taxonomy models
-│   │   └── user.rb                               # Devise user with anonymous handle + OmniAuth
+│   │   └── user.rb                               # Devise user with anonymous handle + OmniAuth + bookmarks
 │   ├── views/posts/                              # Index/show/new/edit templates & shared partials
 │   │   └── _revision_history.html.erb            # Shared revision list
 │   ├── views/answers/edit.html.erb               # Answer edit form
@@ -376,9 +386,9 @@ CU_Blueboard/
 │   └── support/env.rb                       # Cucumber+DatabaseCleaner/OmniAuth setup
 ├── lib/tasks/cucumber.rake             # Rake tasks for Cucumber profiles
 ├── spec/
-│   ├── factories/{users,posts,answers,likes,answer_comments,post_revisions,answer_revisions}.rb # FactoryBot fixtures
-│   ├── models/{post,answer,like,user,answer_comment,post_revision,answer_revision}_spec.rb        # Model specs
-│   ├── requests/{posts,answers,likes,answer_comments,omniauth_callbacks}_spec.rb                  # Request specs
+│   ├── factories/{users,posts,answers,likes,answer_comments,post_revisions,answer_revisions,bookmarks}.rb # FactoryBot fixtures
+│   ├── models/{post,answer,like,user,answer_comment,post_revision,answer_revision,bookmark}_spec.rb        # Model specs
+│   ├── requests/{posts,answers,likes,answer_comments,omniauth_callbacks,bookmarks}_spec.rb                  # Request specs
 │   ├── requests/moderation/{posts,answers}_spec.rb                                              # Moderation request specs
 │   ├── controllers/moderation/posts_controller_spec.rb                                          # Moderation controller specs
 │   ├── jobs/

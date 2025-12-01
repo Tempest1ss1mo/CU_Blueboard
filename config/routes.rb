@@ -39,10 +39,13 @@ Rails.application.routes.draw do
       patch :hide_identity
       patch :unlock
       post :appeal
+      post :bookmark
+      delete :unbookmark
     end
     collection do
       post :preview
       get :my_threads
+      get :bookmarked
     end
 
     post 'upvote', to: 'likes#upvote', on: :member

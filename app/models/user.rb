@@ -10,6 +10,8 @@ class User < ApplicationRecord
   has_many :posts, dependent: :destroy
   has_many :answers, dependent: :destroy
   has_many :likes, dependent: :destroy
+  has_many :bookmarks, dependent: :destroy
+  has_many :bookmarked_posts, through: :bookmarks, source: :post
   has_many :thread_identities, dependent: :destroy
   has_many :audit_logs, dependent: :destroy
   has_many :performed_audit_logs, class_name: 'AuditLog', foreign_key: :performed_by_id, dependent: :destroy

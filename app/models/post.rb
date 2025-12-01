@@ -4,6 +4,8 @@ class Post < ApplicationRecord
   belongs_to :topic
   has_many :answers, dependent: :destroy
   has_many :likes, dependent: :destroy
+  has_many :bookmarks, dependent: :destroy
+  has_many :bookmarked_by_users, through: :bookmarks, source: :user
   has_many :thread_identities, dependent: :destroy
   has_many :audit_logs, as: :auditable, dependent: :destroy
   has_many :post_tags, dependent: :destroy
@@ -93,6 +95,13 @@ class Post < ApplicationRecord
 
   def find_like_by(user)
     find_vote_by(user)
+  end
+
+  # Bookmark helper methods
+  def bookmarked_by?(user)
+    return false unless user
+
+    bookmarks.exists?(user_id: user.id)
   end
 
   # Appeal methods

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_13_233029) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_01_134806) do
   create_table "answer_comments", force: :cascade do |t|
     t.integer "answer_id", null: false
     t.text "body", null: false
@@ -59,6 +59,16 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_13_233029) do
     t.index ["auditable_type", "auditable_id"], name: "index_audit_logs_on_auditable"
     t.index ["performed_by_id"], name: "index_audit_logs_on_performed_by_id"
     t.index ["user_id"], name: "index_audit_logs_on_user_id"
+  end
+
+  create_table "bookmarks", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "post_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["post_id"], name: "index_bookmarks_on_post_id"
+    t.index ["user_id", "post_id"], name: "index_bookmarks_on_user_id_and_post_id", unique: true
+    t.index ["user_id"], name: "index_bookmarks_on_user_id"
   end
 
   create_table "likes", force: :cascade do |t|
@@ -188,6 +198,8 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_13_233029) do
   add_foreign_key "answers", "users", column: "redacted_by_id"
   add_foreign_key "audit_logs", "users"
   add_foreign_key "audit_logs", "users", column: "performed_by_id"
+  add_foreign_key "bookmarks", "posts"
+  add_foreign_key "bookmarks", "users"
   add_foreign_key "likes", "posts"
   add_foreign_key "likes", "users"
   add_foreign_key "post_revisions", "posts"

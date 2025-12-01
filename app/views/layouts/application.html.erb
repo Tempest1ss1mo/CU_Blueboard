@@ -75,6 +75,7 @@
           <% if current_user&.can_moderate? %>
             <%= link_to 'Moderation', moderation_posts_path %>
           <% end %>
+          <%= link_to 'Bookmarks', bookmarked_posts_path %>
           <%= link_to 'My threads', my_threads_posts_path %>
           <%= button_to 'Logout', destroy_user_session_path,
                         method: :delete,
